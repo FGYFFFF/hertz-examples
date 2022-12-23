@@ -1,0 +1,164 @@
+layouts:
+  # 覆盖掉默认的handler.go模板，默认有尾插逻辑，渲染数据源"generator.Handler"
+  - path: handler.go
+    body: |-
+      // this is my custom handler.
+      package {{.PackageName}}
+      import (
+      	"context"
+        "{{.ProjPackage}}/biz/service"
+      	"github.com/cloudwego/hertz/pkg/app"
+      {{- range $k, $v := .Imports}}
+      	{{$k}} "{{$v.Package}}"
+      {{- end}}
+      )
+      {{range $_, $MethodInfo := .Methods}}
+      {{$MethodInfo.Comment}}
+      func {{$MethodInfo.Name}}(ctx context.Context, c *app.RequestContext) {
+      	var err error
+      	{{if ne $MethodInfo.RequestTypeName "" -}}
+      	var req {{$MethodInfo.RequestTypeName}}
+      	err = c.BindAndValidate(&req)
+      	if err != nil {
+      		c.String(400, err.Error())
+      		return
+      	}
+      	{{end}}
+        resp := service.New{{$MethodInfo.Name}}Service(ctx, c).Run(&req)
+      	c.{{.Serializer}}(200, resp)
+      }
+      {{end}}
+
+  # handler.go 尾插逻辑使用到的模板, 渲染数据源如下，可优化
+#  data := make(map[string]string, 5)
+#  data["Comment"] = method.Comment
+#  data["Name"] = method.Name
+#  data["RequestTypeName"] = method.RequestTypeName
+#  data["ReturnTypeName"] = method.ReturnTypeName
+#  data["Serializer"] = method.Serializer
+  - path: handler_single.go
+    body: |+
+      {{.Comment}}
+      func {{.Name}}(ctx context.Context, c *app.RequestContext) {
+      	var err error
+      	{{if ne .RequestTypeName "" -}}
+      	var req {{.RequestTypeName}}
+      	err = c.BindAndValidate(&req)
+      	if err != nil {
+      		c.String(400, err.Error())
+      		return
+      	}
+      	{{end}}
+        resp := service.New{{.Name}}Service(ctx, c).Run(&req)
+      	c.{{.Serializer}}(200, resp)
+      }
+
+  # 生层 service 代码
+  # 循环生成 method 文件，更新的时候已有的文件不动，新文件自动生成；
+  # 循环生成文件，需要文件名模板和 loopService/loopMethod 配合；
+  # 渲染数据源"generator.CustomizedFileForMethod"
+  - path: biz/service/{{.MethodName}}.go
+    loop_method: true
+    update_behavior: 0
+    body: |-
+      package service
+      import (
+      	"context"
+      	"github.com/cloudwego/hertz/pkg/app"
+      {{- range $k, $v := .Models}}
+      	{{$k}} "{{$v.Package}}"
+      {{- end}}
+      )
+      type {{.Name}}Service struct {
+          RequestContext  *app.RequestContext
+          Context         context.Context
+      }
+      func New{{.Name}}Service(Context context.Context, RequestContext *app.RequestContext) *{{.Name}}Service {
+      	return &{{.Name}}Service{RequestContext: RequestContext, Context: Context}
+      }
+      func (h *{{.Name}}Service) Run(req *{{.RequestTypeName}}) ( resp *{{.ReturnTypeName}}) {
+        //defer func() {
+        //	hlog.CtxInfof(h.Context, "req = %+v", req)
+        //	hlog.CtxInfof(h.Context, "resp = %+v", resp)
+        //}()
+        // todo edit your code
+      	return
+      }
+  # 生层 service 的单测代码
+  # 同上
+  - path: biz/service/{{.MethodName}}_test.go
+    loop_method: true
+    update_behavior: 0
+    body: |-
+      package {{.FilePackage}}
+      import (
+        "context"
+        "testing"
+        "github.com/cloudwego/hertz/pkg/app"
+        "github.com/cloudwego/hertz/pkg/common/test/assert"
+      {{- range $k, $v := .Models}}
+      	{{$k}} "{{$v.Package}}"
+      {{- end}}
+      )
+      func Test{{.Name}}Service_Run(t *testing.T) {
+        ctx := context.Background()
+        c := app.NewContext(1)
+        s := New{{.Name}}Service(ctx, c)
+        // init req and assert value
+        req := &{{.RequestTypeName}}{}
+        resp := s.Run(req)
+        assert.DeepEqual(t, nil, resp)
+        // todo edit your unit test.
+      }
+
+  # 循环生成 service 文件，
+  # {{.ServiceName}}/{{.MethodName}} 需要和 loopService/loopMethod 配合使用
+  # 渲染数据源为 "generator.CustomizedFileForService"
+  - path: "{{.HandlerDir}}/{{.GenPackage}}/{{.ServiceName}}_test.go"
+    loop_service: true
+    # 2 表示 尾部 追加
+    update_behavior: 2
+    # 当以service作为循环的时候，每个 service 里可包含多个 "method",因此可以用 method 来做 key，进行 method 的增量更新
+    append_key: "method"
+    append_content: |-
+      func Test{{.Name}}(t *testing.T) {
+        h := server.Default()
+        h.GET("{{.Path}}", {{.Name}})
+        w := ut.PerformRequest(h.Engine, "{{.HTTPMethod}}", "{{.Path}}", &ut.Body{Body: bytes.NewBufferString(""), Len: 1},
+        ut.Header{})
+        resp := w.Result()
+        assert.DeepEqual(t, 201, resp.StatusCode())
+        assert.DeepEqual(t, "", string(resp.Body()))
+        // todo edit your unit test.
+      }
+    body: |-
+      package {{.FilePackage}}
+      import (
+        "bytes"
+        "testing"
+        "github.com/cloudwego/hertz/pkg/app/server"
+        "github.com/cloudwego/hertz/pkg/common/test/assert"
+        "github.com/cloudwego/hertz/pkg/common/ut"
+      )
+    
+    
+      {{range $_, $MethodInfo := $.Methods}}
+        func Test{{$MethodInfo.Name}}(t *testing.T) {
+        h := server.Default()
+        h.GET("{{$MethodInfo.Path}}", {{$MethodInfo.Name}})
+        w := ut.PerformRequest(h.Engine, "{{$MethodInfo.HTTPMethod}}", "{{$MethodInfo.Path}}", &ut.Body{Body: bytes.NewBufferString(""), Len: 1},
+        ut.Header{})
+        resp := w.Result()
+        assert.DeepEqual(t, 201, resp.StatusCode())
+        assert.DeepEqual(t, "", string(resp.Body()))
+        // todo edit your unit test.
+        }
+      {{end}}
+
+  # 随便测试
+  - path: biz/Fgy/hello.go
+    update_behavior: 2
+    append_key: "method"
+    append_content: "\n// test\n"
+    body: |-
+      package {{.FilePackage}}
