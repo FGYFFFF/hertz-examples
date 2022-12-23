@@ -6,6 +6,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	example "hertz-examples/all_in_one/biz/model/hello/example"
 	"hertz-examples/all_in_one/biz/service"
+	"hertz-examples/all_in_one/biz/service/v2"
 )
 
 // HelloMethod .
@@ -20,6 +21,7 @@ func HelloMethod(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := service.NewHelloMethodService(ctx, c).Run(&req)
+
 	c.JSON(200, resp)
 }
 
@@ -35,6 +37,7 @@ func HelloMethod2(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := service.NewHelloMethod2Service(ctx, c).Run(&req)
+
 	c.JSON(200, resp)
 }
 
@@ -50,6 +53,7 @@ func HelloMethod3(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := service.NewHelloMethod3Service(ctx, c).Run(&req)
+
 	c.JSON(200, resp)
 }
 
@@ -65,6 +69,7 @@ func HelloMethod4(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := service.NewHelloMethod4Service(ctx, c).Run(&req)
+
 	c.JSON(200, resp)
 }
 
@@ -79,6 +84,7 @@ func HelloMethod5(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := service.NewHelloMethod5Service(ctx, c).Run(&req)
+	resp := v2.NewHelloMethod5Service(ctx, c).Run(&req)
+
 	c.JSON(200, resp)
 }

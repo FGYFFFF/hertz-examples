@@ -1,4 +1,4 @@
-package v1
+package service
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 	"testing"
 )
 
-func TestHelloMethod2Service_Run(t *testing.T) {
+func TestHelloMethodService_Run(t *testing.T) {
 	ctx := context.Background()
 	c := app.NewContext(1)
-	s := NewHelloMethod2Service(ctx, c)
+	s := NewHelloMethodService(ctx, c)
 	// init req and assert value
 	req := &example.HelloReq{}
 	resp := s.Run(req)

@@ -2,14 +2,21 @@ layouts:
   # 覆盖掉默认的handler.go模板，默认有尾插逻辑，渲染数据源"generator.Handler"
   - path: handler.go
     body: |-
+      {{$OutDirs := GetUniqueHandlerOutDir .Methods}}
       // this is my custom handler.
       package {{.PackageName}}
       import (
       	"context"
-        "{{.ProjPackage}}/biz/service"
       	"github.com/cloudwego/hertz/pkg/app"
       {{- range $k, $v := .Imports}}
       	{{$k}} "{{$v.Package}}"
+      {{- end}}
+      {{- range $_, $OutDir := $OutDirs}}
+        {{if eq $OutDir "" -}}
+          "{{$.ProjPackage}}/biz/service"
+        {{- else -}}
+          "{{$.ProjPackage}}/biz/service/{{$OutDir}}"
+        {{end}}
       {{- end}}
       )
       {{range $_, $MethodInfo := .Methods}}
@@ -24,7 +31,11 @@ layouts:
       		return
       	}
       	{{end}}
-        resp := service.New{{$MethodInfo.Name}}Service(ctx, c).Run(&req)
+        {{if eq $MethodInfo.OutputDir "" -}}
+          resp := service.New{{$MethodInfo.Name}}Service(ctx, c).Run(&req)
+        {{else}}
+          resp := {{$MethodInfo.OutputDir}}.New{{$MethodInfo.Name}}Service(ctx, c).Run(&req)
+        {{end}}
       	c.{{.Serializer}}(200, resp)
       }
       {{end}}
@@ -62,7 +73,7 @@ layouts:
     loop_method: true
     update_behavior: 0
     body: |-
-      package service
+      package {{.FilePackage}}
       import (
       	"context"
       	"github.com/cloudwego/hertz/pkg/app"
