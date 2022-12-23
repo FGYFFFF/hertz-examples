@@ -54,10 +54,11 @@ layouts:
       }
 
   # 生层 service 代码
+  # {{.HandlerGenPath}} 用来分包
   # 循环生成 method 文件，更新的时候已有的文件不动，新文件自动生成；
   # 循环生成文件，需要文件名模板和 loopService/loopMethod 配合；
   # 渲染数据源"generator.CustomizedFileForMethod"
-  - path: biz/service/{{.MethodName}}.go
+  - path: "biz/service/{{.HandlerGenPath}}/{{ToSnakeCase .MethodName}}.go"
     loop_method: true
     update_behavior: 0
     body: |-
@@ -86,7 +87,7 @@ layouts:
       }
   # 生层 service 的单测代码
   # 同上
-  - path: biz/service/{{.MethodName}}_test.go
+  - path: "biz/service/{{.HandlerGenPath}}/{{ToSnakeCase .MethodName}}_test.go"
     loop_method: true
     update_behavior: 0
     body: |-
@@ -114,7 +115,7 @@ layouts:
   # 循环生成 service 文件，
   # {{.ServiceName}}/{{.MethodName}} 需要和 loopService/loopMethod 配合使用
   # 渲染数据源为 "generator.CustomizedFileForService"
-  - path: "{{.HandlerDir}}/{{.GenPackage}}/{{.ServiceName}}_test.go"
+  - path: "{{.HandlerDir}}/{{.GenPackage}}/{{ToSnakeCase .ServiceName}}_test.go"
     loop_service: true
     # 2 表示 尾部 追加
     update_behavior: 2

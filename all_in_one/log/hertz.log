@@ -1,5 +1,0 @@
-{"level":"info","msg":"HERTZ: Using network library=netpoll","time":"2022-12-23T18:42:26+08:00"}
-{"level":"info","msg":"HERTZ: HTTP server listening on address=[::]:8080","time":"2022-12-23T18:42:26+08:00"}
-{"level":"info","msg":"HERTZ: Received signal: interrupt\n","time":"2022-12-23T18:42:27+08:00"}
-{"level":"info","msg":"HERTZ: Begin graceful shutdown, wait at most num=5 seconds...","time":"2022-12-23T18:42:27+08:00"}
-{"level":"info","msg":"HERTZ: Execute OnShutdownHooks finish","time":"2022-12-23T18:42:27+08:00"}
