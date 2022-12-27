@@ -1,4 +1,4 @@
-package v2
+package service
 
 import (
 	"context"
@@ -6,15 +6,15 @@ import (
 	example "hertz-examples/all_in_one/biz/model/hello/example"
 )
 
-type HelloMethod5Service struct {
+type HelloMethod12Service struct {
 	RequestContext *app.RequestContext
 	Context        context.Context
 }
 
-func NewHelloMethod5Service(Context context.Context, RequestContext *app.RequestContext) *HelloMethod5Service {
-	return &HelloMethod5Service{RequestContext: RequestContext, Context: Context}
+func NewHelloMethod12Service(Context context.Context, RequestContext *app.RequestContext) *HelloMethod12Service {
+	return &HelloMethod12Service{RequestContext: RequestContext, Context: Context}
 }
-func (h *HelloMethod5Service) Run(req *example.HelloReq) (resp *example.HelloResp) {
+func (h *HelloMethod12Service) Run(req *example.HelloReq) (resp *example.HelloResp) {
 	//defer func() {
 	//	hlog.CtxInfof(h.Context, "req = %+v", req)
 	//	hlog.CtxInfof(h.Context, "resp = %+v", resp)

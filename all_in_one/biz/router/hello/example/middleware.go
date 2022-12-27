@@ -35,3 +35,38 @@ func _hellomethod5Mw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _hellomethod6Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _hellomethod10Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _hellomethod11Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _hellomethod12Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _hellomethod7Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _hellomethod8Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _hellomethod9Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

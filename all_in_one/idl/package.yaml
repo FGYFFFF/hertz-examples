@@ -7,6 +7,7 @@ layouts:
       package {{.PackageName}}
       import (
       	"context"
+      
       	"github.com/cloudwego/hertz/pkg/app"
       {{- range $k, $v := .Imports}}
       	{{$k}} "{{$v.Package}}"
@@ -39,6 +40,18 @@ layouts:
       	c.{{.Serializer}}(200, resp)
       }
       {{end}}
+    update_behavior:
+      # 自定义的 import 插入模板
+      import_tpl:
+        - |-
+          {{$OutDirs := GetUniqueHandlerOutDir .Methods}}
+          {{- range $_, $OutDir := $OutDirs}}
+            {{if eq $OutDir "" -}}
+              "{{$.ProjPackage}}/biz/service"
+            {{- else -}}
+              "{{$.ProjPackage}}/biz/service/{{$OutDir}}"
+            {{end}}
+          {{- end}}
 
   # handler.go 尾插逻辑使用到的模板, 渲染数据源如下，可优化
 #  data := make(map[string]string, 5)
@@ -60,7 +73,11 @@ layouts:
       		return
       	}
       	{{end}}
-        resp := service.New{{.Name}}Service(ctx, c).Run(&req)
+        {{if eq .OutputDir "" -}}
+          resp := service.New{{.Name}}Service(ctx, c).Run(&req)
+        {{else}}
+          resp := {{.OutputDir}}.New{{.Name}}Service(ctx, c).Run(&req)
+        {{end}}
       	c.{{.Serializer}}(200, resp)
       }
 
@@ -71,7 +88,8 @@ layouts:
   # 渲染数据源"generator.CustomizedFileForMethod"
   - path: "biz/service/{{.HandlerGenPath}}/{{ToSnakeCase .MethodName}}.go"
     loop_method: true
-    update_behavior: 0
+    update_behavior:
+      behavior: 0
     body: |-
       package {{.FilePackage}}
       import (
@@ -100,7 +118,8 @@ layouts:
   # 同上
   - path: "biz/service/{{.HandlerGenPath}}/{{ToSnakeCase .MethodName}}_test.go"
     loop_method: true
-    update_behavior: 0
+    update_behavior:
+      behavior: 0
     body: |-
       package {{.FilePackage}}
       import (
@@ -129,20 +148,22 @@ layouts:
   - path: "{{.HandlerDir}}/{{.GenPackage}}/{{ToSnakeCase .ServiceName}}_test.go"
     loop_service: true
     # 2 表示 尾部 追加
-    update_behavior: 2
-    # 当以service作为循环的时候，每个 service 里可包含多个 "method",因此可以用 method 来做 key，进行 method 的增量更新
-    append_key: "method"
-    append_content: |-
-      func Test{{.Name}}(t *testing.T) {
-        h := server.Default()
-        h.GET("{{.Path}}", {{.Name}})
-        w := ut.PerformRequest(h.Engine, "{{.HTTPMethod}}", "{{.Path}}", &ut.Body{Body: bytes.NewBufferString(""), Len: 1},
-        ut.Header{})
-        resp := w.Result()
-        assert.DeepEqual(t, 201, resp.StatusCode())
-        assert.DeepEqual(t, "", string(resp.Body()))
-        // todo edit your unit test.
-      }
+    update_behavior:
+      behavior: 2
+      # 当以service作为循环的时候，每个 service 里可包含多个 "method",因此可以用 method 来做 key，进行 method 的增量更新
+      append_key: "method"
+      insert_key: "Test{{$.Name}}"
+      append_content_tpl: |-
+        func Test{{.Name}}(t *testing.T) {
+          h := server.Default()
+          h.GET("{{.Path}}", {{.Name}})
+          w := ut.PerformRequest(h.Engine, "{{.HTTPMethod}}", "{{.Path}}", &ut.Body{Body: bytes.NewBufferString(""), Len: 1},
+          ut.Header{})
+          resp := w.Result()
+          assert.DeepEqual(t, 201, resp.StatusCode())
+          assert.DeepEqual(t, "", string(resp.Body()))
+          // todo edit your unit test.
+        }
     body: |-
       package {{.FilePackage}}
       import (
@@ -169,8 +190,9 @@ layouts:
 
   # 随便测试
   - path: biz/Fgy/hello.go
-    update_behavior: 2
-    append_key: "method"
-    append_content: "\n// test\n"
+    update_behavior:
+      behavior: 2
+      append_key: "method"
+      append_content_tpl: "\n// test\n"
     body: |-
       package {{.FilePackage}}

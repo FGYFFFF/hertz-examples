@@ -18,8 +18,15 @@ func Register(r *server.Hertz) {
 
 	root := r.Group("/", rootMw()...)
 	root.GET("/hello", append(_hellomethodMw(), example.HelloMethod)...)
+	root.GET("/hello10", append(_hellomethod10Mw(), example.HelloMethod10)...)
+	root.GET("/hello11", append(_hellomethod11Mw(), example.HelloMethod11)...)
+	root.GET("/hello12", append(_hellomethod12Mw(), example.HelloMethod12)...)
 	root.GET("/hello2", append(_hellomethod2Mw(), example.HelloMethod2)...)
 	root.GET("/hello3", append(_hellomethod3Mw(), example.HelloMethod3)...)
 	root.GET("/hello4", append(_hellomethod4Mw(), example.HelloMethod4)...)
 	root.GET("/hello5", append(_hellomethod5Mw(), example.HelloMethod5)...)
+	root.GET("/hello6", append(_hellomethod6Mw(), example.HelloMethod6)...)
+	root.GET("/hello7", append(_hellomethod7Mw(), example.HelloMethod7)...)
+	root.GET("/hello8", append(_hellomethod8Mw(), example.HelloMethod8)...)
+	root.GET("/hello9", append(_hellomethod9Mw(), example.HelloMethod9)...)
 }
